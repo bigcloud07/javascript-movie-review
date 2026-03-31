@@ -4,35 +4,47 @@ describe("template spec", () => {
   });
 
   context("Movie List 탐색", () => {
-    // 영화 목록이 보인다 => 영화가 20개 있다.
-    // 더보기 버튼이 있다
-    // 더보기 버튼을 누르면 영화가 40개 출력된다.
+    cy.get(".item").should('have.length', 20);
+    cy.get('.show-more-button');
+    cy.get('.show-more-button').click();
+    cy.get(".item").should('have.length', 40);
   });
 
   context("검색 - 결과 있음", () => {
-    // 메인 페이지에서 검색어 "Inception" 입력
-    // 검색 버튼 클릭
-    // "Inception" 카드가 보인다
+    cy.get('.search-input').type("Inception");
+    cy.get(".search-submit").click();
+    cy.get(".item")
+      .its('length')
+      .should('be.gte', 1)
   });
+
   context("검색 - 결과 있는 경우의 재검색", () => {
-    // 메인 페이지에서 검색어 "Inception" 입력
-    // 검색 버튼 클릭
-    // "Inception" 카드가 보인다
-    // 검색창에 "Inception" 입력
-    // 검색 버튼 클릭
-    // "Inception" 카드가 보인다
+    cy.get('.search-input').type("Inception");
+    cy.get(".search-submit").click();
+    cy.get(".item")
+      .its('length')
+      .should('be.gte', 1)
+    cy.get('.search-input').type("Inception");
+    cy.get(".search-submit").click();
+    cy.get(".item")
+      .its('length')
+      .should('be.gte', 1)
   });
+
   context("검색 - 결과 없음", () => {
-    // 메인 페이지에서 검색어 "$$%@@" 입력
-    // 검색 버튼 클릭
-    // "결과가 없습니다" 메세지가 보인다
+    cy.get('.search-input').type("$$%@@");
+    cy.get(".search-submit").click();
+    cy.contains("검색 결과가 없습니다");
   });
+  
   context("검색 - 결과 없는 경우의 재검색", () => {
-    // 메인 페이지에서 검색어 "$$%@@" 입력
-    // 검색 버튼 클릭
-    // "결과가 없습니다" 메세지가 보인다
-    // 검색어 "Inception" 입력
-    // 검색 버튼 클릭
-    // "Inception" 카드가 보인다
+    cy.get('.search-input').type("$$%@@");
+    cy.get(".search-submit").click();
+    cy.contains("검색 결과가 없습니다");
+    cy.get('.search-input').type("Inception");
+    cy.get(".search-submit").click();
+    cy.get(".item")
+      .its('length')
+      .should('be.gte', 1)
   });
 });
