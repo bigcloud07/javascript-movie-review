@@ -181,7 +181,7 @@ export function updateEmptyListAlert() {
     listEl.insertAdjacentHTML(
       "afterend", `
         <div class="empty-list-alert">
-          <img src="/svg/planet.svg" alt="행성이" />
+          <img src="${import.meta.env.BASE_URL}svg/planet.svg" alt="행성이" />
           <p class="empty-list-message">검색 결과가 없습니다.</p>
         </div>
       `,
