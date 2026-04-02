@@ -47,7 +47,7 @@ export async function fetchMovies(endpoint: TMDBAPIEndpoint, params: Record<stri
   });
 
   try {
-    const fetchPromise = fetch(`${import.meta.env.VITE_API_URL}${endpoint}?${queryParams}`, FETCH_OPTION).then(res => res.json());
+    const fetchPromise = fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}?${queryParams}`, FETCH_OPTION).then(res => res.json());
     return await Promise.race([fetchPromise, timeoutFn(FETCH_TIMEOUT_SECONDS)]);
   } catch (error) {
     const newError = new Error();
@@ -82,7 +82,7 @@ export function createMovieItemTemplate(movie: Movie): string {
       <div class="item">
         <img
           class="thumbnail"
-          src="https://image.tmdb.org/t/p/w200${movie.poster_path}"
+          src="${import.meta.env.VITE_IMAGE_BASE_URL}/w200${movie.poster_path}"
           onerror="this.src='/images/default_movie_image.png'"
           alt="${movie.title}"
         />
@@ -144,7 +144,7 @@ export function renderTopRatedMovie(movie: Movie) {
   }
 
   if (backgroundContainerEl) {
-    backgroundContainerEl.style.backgroundImage = `url(https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${movie.backdrop_path})`;
+    backgroundContainerEl.style.backgroundImage = `url(${import.meta.env.VITE_IMAGE_BASE_URL}/w1920_and_h800_multi_faces${movie.backdrop_path})`;
   }
 }
 
