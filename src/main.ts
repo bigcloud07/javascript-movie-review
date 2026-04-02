@@ -1,5 +1,6 @@
 import { MovieListResponse, Movie } from "./type";
 import { fetchPopularMoviesByPageRange, getPage, removeSkeletonItem, renderMovies, renderShowMoreButton, renderSkeletonItems, renderTopRatedMovie, setPage } from "./utils";
+import { showErrorToast } from "./toast";
 
 addEventListener("load", async () => {
   let prevResponseList: MovieListResponse[] = [];
@@ -36,7 +37,8 @@ addEventListener("load", async () => {
       renderTopRatedMovie(prevResponseList[0].results[0])
     }
   } catch (error) {
-    alert(error);
+    if (error instanceof Error) {
+      showErrorToast({ title: error.name, message: error.message })
+    }
   }
-
 });

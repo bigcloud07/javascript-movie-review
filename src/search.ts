@@ -1,3 +1,4 @@
+import { showErrorToast } from "./toast";
 import { MovieListResponse, Movie } from "./type";
 import { fetchSearchMoviesByPageRange, getPage, getQuery, removeSkeletonItem, renderListTitle, renderMovies, renderShowMoreButton, renderSkeletonItems, renderTopRatedMovie, setPage, setQuery, updateEmptyListAlert } from "./utils";
 
@@ -44,7 +45,8 @@ addEventListener("load", async () => {
       renderTopRatedMovie(prevResponseList[0].results[0])
     }
   } catch (error) {
-    alert(error);
+    if (error instanceof Error) {
+      showErrorToast({ title: error.name, message: error.message })
+    }
   }
-
 });
