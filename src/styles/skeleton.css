@@ -15,6 +15,11 @@
   height: 48px;
 }
 
+.skeleton-list-title {
+  width: 240px;
+  height: 36px;
+}
+
 .skeleton-item .thumbnail {
   display: block;
 }

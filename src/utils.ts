@@ -1,11 +1,25 @@
 import { FETCH_OPTION } from "./constans";
 import { Movie, MovieListResponse, TMDBAPIEndpoint } from "./type";
 
-export function getPage() {
+export function getPramFromURL(name: string, defaultValue: string) {
   const urlParams = new URLSearchParams(window.location.search);
-  const pageStr = urlParams.get("page") ?? "1";
+  return urlParams.get(name) ?? defaultValue
+}
+
+export function getQuery() {
+  return getPramFromURL("query", "");
+}
+
+export function getPage() {
+  const pageStr = getPramFromURL("page", "1");
   const page = isNaN(Number(pageStr)) ? 1 : Number(pageStr);
   return Math.max(1, page);
+}
+
+export function setQuery(query: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("query", query);
+  window.history.replaceState({}, "", url);
 }
 
 export function setPage(page: number) {
@@ -13,6 +27,8 @@ export function setPage(page: number) {
   url.searchParams.set("page", String(page));
   window.history.replaceState({}, "", url);
 }
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function fetchMovies(endpoint: "/search/movie", params: { query: string, page: number }): Promise<MovieListResponse>
 export async function fetchMovies(endpoint: "/movie/popular", params: { page: number }): Promise<MovieListResponse>
@@ -30,9 +46,20 @@ export async function fetchMovies(endpoint: TMDBAPIEndpoint, params: Record<stri
   return await response.json() as MovieListResponse
 }
 
-export async function fetchMoviesByPageRange(startPage: number, endPage: number) {
+export async function fetchPopularMoviesByPageRange(startPage: number, endPage: number) {
   const promises = Array.from({ length: endPage - startPage }).map(
-    (_, index) => fetchMovies('/movie/popular', { page: startPage + index + 1 }),
+    async (_, index) => {
+      if (index !== 0) await delay(index * 200);
+      return fetchMovies('/movie/popular', { page: startPage + index + 1 });
+    },
+  );
+
+  return Promise.all(promises);
+}
+
+export async function fetchSearchMoviesByPageRange(startPage: number, endPage: number, query: string) {
+  const promises = Array.from({ length: endPage - startPage }).map(
+    (_, index) => fetchMovies('/search/movie', { query, page: startPage + index + 1 }),
   );
 
   return Promise.all(promises);
@@ -53,7 +80,7 @@ export function createMovieItemTemplate(movie: Movie): string {
             <img src="/images/star_empty.png" class="star" />
             <span>${movie.vote_average.toFixed(1)}</span>
           </p>
-          <strong>${movie.title}</strong>
+          <p class="movie-title">${movie.title}</p>
         </div>
       </div>
     </li>
@@ -117,6 +144,25 @@ export function renderMovies(movieList: Movie[]) {
   );
 }
 
+export function updateEmptyListAlert() {
+  const listEl = document.querySelector(".thumbnail-list");
+
+  if (!listEl) return;
+
+  if (listEl.children.length === 0) {
+    listEl.insertAdjacentHTML(
+      "afterend", `
+        <div class="empty-list-alert">
+          <img src="/svg/planet.svg" alt="행성이" />
+          <p class="empty-list-message">검색 결과가 없습니다.</p>
+        </div>
+      `,
+    );
+  } else {
+    document.querySelector('.empty-list-alert')?.remove();
+  }
+}
+
 export function renderShowMoreButton(prevResponseList: MovieListResponse[], page: number, callback: () => void) {
   if (
     prevResponseList.length &&
@@ -132,8 +178,15 @@ export function renderShowMoreButton(prevResponseList: MovieListResponse[], page
         ?.insertAdjacentElement("afterend", button);
     }
   } else {
-    const showMoreButtonEl = document.querySelector(".show-more-button");
-    showMoreButtonEl?.parentElement?.removeChild(showMoreButtonEl);
+    document.querySelector(".show-more-button")?.remove();
+  }
+}
+
+export function renderListTitle(query: string) {
+  const listTitleEl = document.querySelector('.list-title');
+
+  if (listTitleEl) {
+    listTitleEl.textContent = `"${query}" 검색 결과`
   }
 }
 
