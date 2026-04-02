@@ -119,7 +119,7 @@ function createMovieItemTemplate(movie) {
         />
         <div class="item-desc">
           <p class="rate">
-            <img src="${"/javascript-movie-review/"}/images/star_empty.png" class="star" />
+            <img src="${"/javascript-movie-review/"}images/star_empty.png" class="star" />
             <span>${movie.vote_average.toFixed(1)}</span>
           </p>
           <p class="movie-title">${movie.title}</p>
@@ -183,7 +183,7 @@ function updateEmptyListAlert() {
       "afterend",
       `
         <div class="empty-list-alert">
-          <img src="/svg/planet.svg" alt="행성이" />
+          <img src="${"/javascript-movie-review/"}svg/planet.svg" alt="행성이" />
           <p class="empty-list-message">검색 결과가 없습니다.</p>
         </div>
       `
