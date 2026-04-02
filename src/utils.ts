@@ -30,6 +30,14 @@ export function setPage(page: number) {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const timeoutFn = (ms: number) => new Promise((_, reject) => {
+  setTimeout(() => {
+    reject(new Error(`요청 시간이 ${ms}ms를 초과했습니다.`));
+  }, ms);
+})
+
+const FETCH_TIMEOUT_SECONDS = 10000;
+
 export async function fetchMovies(endpoint: "/search/movie", params: { query: string, page: number }): Promise<MovieListResponse>
 export async function fetchMovies(endpoint: "/movie/popular", params: { page: number }): Promise<MovieListResponse>
 export async function fetchMovies(endpoint: TMDBAPIEndpoint, params: Record<string, any>): Promise<MovieListResponse> {
@@ -37,13 +45,16 @@ export async function fetchMovies(endpoint: TMDBAPIEndpoint, params: Record<stri
     language: "ko-KR",
     ...params
   });
-  const response = await fetch(`https://api.themoviedb.org/3${endpoint}?${queryParams}`, FETCH_OPTION)
 
-  if (!response.ok) {
-    throw new Error(`API 요청중 에러가 발생했습니다. (${endpoint})`)
+  try {
+    const fetchPromise = fetch(`${import.meta.env.VITE_API_URL}${endpoint}?${queryParams}`, FETCH_OPTION).then(res => res.json());
+    return await Promise.race([fetchPromise, timeoutFn(FETCH_TIMEOUT_SECONDS)]);
+  } catch (error) {
+    const newError = new Error();
+    newError.name = "API 요청중 에러가 발생했습니다."
+    newError.message = `${error instanceof Error ? (error.message ?? "not found error message") : "not found error"} (${endpoint})`
+    throw newError
   }
-
-  return await response.json() as MovieListResponse
 }
 
 export async function fetchPopularMoviesByPageRange(startPage: number, endPage: number) {
