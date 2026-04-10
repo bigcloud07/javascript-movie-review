@@ -4,15 +4,25 @@ function createToast({ title, message }: { title?: string, message: string }): H
   const toast = document.createElement("div");
   toast.className = "toast";
 
-  toast.innerHTML = `
-    <div>
-      <p class="toast-title">${title}</p>
-      <p class="toast-message">${message}</p>
-    </div>
-    <button class="toast-close" aria-label="닫기">✕</button>
-  `;
+  const body = document.createElement("div");
 
-  const closeBtn = toast.querySelector<HTMLButtonElement>(".toast-close")!;
+  const titleEl = document.createElement("p");
+  titleEl.className = "toast-title";
+  titleEl.textContent = title ?? "";
+  body.appendChild(titleEl);
+
+  const messageEl = document.createElement("p");
+  messageEl.className = "toast-message";
+  messageEl.textContent = message;
+  body.appendChild(messageEl);
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "toast-close";
+  closeBtn.setAttribute("aria-label", "닫기");
+  closeBtn.textContent = "✕";
+
+  toast.appendChild(body);
+  toast.appendChild(closeBtn);;
   closeBtn.addEventListener("click", () => removeToast(toast));
 
   return toast;
