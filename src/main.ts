@@ -1,40 +1,17 @@
-import { MovieListResponse, Movie } from "./type";
-import { fetchPopularMoviesByPageRange, getPage, removeSkeletonItem, removeTopRatedMovieSkeleton, renderMovies, renderShowMoreButton, renderSkeletonItems, renderTopRatedMovie, setPage } from "./utils";
-import { showErrorToast } from "./toast";
+import { MovieListResponse } from "./type";
+import { fetchPopularMoviesByPageRange, getPage, removeTopRatedMovieSkeleton, renderMoviePage, renderTopRatedMovie } from "./utils";
 
 addEventListener("load", async () => {
   let prevResponseList: MovieListResponse[] = [];
 
   async function renderPopularMoviePage(page: number) {
-    try {
-      setPage(page);
-
-      renderSkeletonItems(20);
-
-      const responseList = await fetchPopularMoviesByPageRange(
-        prevResponseList.length,
-        page,
-      );
-
-      prevResponseList.push(...responseList);
-
-      const movieList = responseList.reduce((arr: Movie[], response) => {
-        return [...arr, ...response.results];
-      }, []);
-
-      renderMovies(movieList);
-
-      renderShowMoreButton(prevResponseList, page, () => {
-        renderPopularMoviePage(getPage() + 1);
-      });
-    } catch (error) {
-      if (error instanceof Error) {
-        showErrorToast({ title: error.name, message: error.message });
-      }
-    } finally {
-      removeSkeletonItem();
-      removeTopRatedMovieSkeleton();
-    }
+    await renderMoviePage({
+      page,
+      prevResponseList,
+      fetchFn: (startPage, p) => fetchPopularMoviesByPageRange(startPage, p),
+      extraFinally: removeTopRatedMovieSkeleton,
+      showMoreCallback: () => renderPopularMoviePage(getPage() + 1),
+    });
   }
 
   await renderPopularMoviePage(getPage());

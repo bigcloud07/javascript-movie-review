@@ -1,5 +1,6 @@
 import { FETCH_OPTION, FETCH_TIMEOUT_MS } from "./constans";
 import { Movie, MovieListResponse, TMDBAPIEndpoint } from "./type";
+import { showErrorToast } from "./toast";
 
 export function getPramFromURL(name: string, defaultValue: string) {
   const urlParams = new URLSearchParams(window.location.search);
@@ -87,6 +88,49 @@ export async function fetchPopularMoviesByPageRange(startPage: number, endPage: 
   );
 
   return Promise.all(promises);
+}
+
+export async function renderMoviePage({
+  page,
+  prevResponseList,
+  fetchFn,
+  beforeFetch,
+  afterRender,
+  extraFinally,
+  showMoreCallback,
+}: {
+  page: number;
+  prevResponseList: MovieListResponse[];
+  fetchFn: (startPage: number, page: number) => Promise<MovieListResponse[]>;
+  beforeFetch?: () => void;
+  afterRender?: () => void;
+  extraFinally?: () => void;
+  showMoreCallback: () => void;
+}): Promise<void> {
+  try {
+    setPage(page);
+    beforeFetch?.();
+    renderSkeletonItems(20);
+
+    const responseList = await fetchFn(prevResponseList.length, page);
+    prevResponseList.push(...responseList);
+
+    const movieList = responseList.reduce((arr: Movie[], response) => {
+      return [...arr, ...response.results];
+    }, []);
+
+    renderMovies(movieList);
+    afterRender?.();
+
+    renderShowMoreButton(prevResponseList, page, showMoreCallback);
+  } catch (error) {
+    if (error instanceof Error) {
+      showErrorToast({ title: error.name, message: error.message });
+    }
+  } finally {
+    removeSkeletonItem();
+    extraFinally?.();
+  }
 }
 
 export async function fetchSearchMoviesByPageRange(startPage: number, endPage: number, query: string) {
