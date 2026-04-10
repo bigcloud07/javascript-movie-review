@@ -1,7 +1,7 @@
 const TMDB_POPULAR_URL_PATTERN = "**/movie/popular**";
 const TMDB_SEARCH_URL_PATTERN = "**/search/movie**";
 
-describe("Movie App", () => {
+describe("App 성공 케이스", () => {
   beforeEach(() => {
     cy.intercept("GET", TMDB_POPULAR_URL_PATTERN, (req) => {
       const url = new URL(req.url);
@@ -73,7 +73,9 @@ describe("Movie App", () => {
       cy.get(".item").its("length").should("be.gte", 1);
     });
   });
+});
 
+describe("App 실패 케이스", () => {
   context("API 요청 실패", () => {
     it("영화 API 실패 시 토스트 에러가 표시된다", () => {
       cy.intercept("GET", TMDB_POPULAR_URL_PATTERN, { statusCode: 500 }).as("failedPopularMovies");
