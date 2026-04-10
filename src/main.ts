@@ -1,5 +1,5 @@
 import { MovieListResponse, Movie } from "./type";
-import { fetchPopularMoviesByPageRange, getPage, removeSkeletonItem, renderMovies, renderShowMoreButton, renderSkeletonItems, renderTopRatedMovie, setPage } from "./utils";
+import { fetchPopularMoviesByPageRange, getPage, removeSkeletonItem, removeTopRatedMovieSkeleton, renderMovies, renderShowMoreButton, renderSkeletonItems, renderTopRatedMovie, setPage } from "./utils";
 import { showErrorToast } from "./toast";
 
 addEventListener("load", async () => {
@@ -16,8 +16,6 @@ addEventListener("load", async () => {
         page,
       );
 
-      removeSkeletonItem();
-
       prevResponseList.push(...responseList);
 
       const movieList = responseList.reduce((arr: Movie[], response) => {
@@ -33,6 +31,9 @@ addEventListener("load", async () => {
       if (error instanceof Error) {
         showErrorToast({ title: error.name, message: error.message });
       }
+    } finally {
+      removeSkeletonItem();
+      removeTopRatedMovieSkeleton();
     }
   }
 
