@@ -5,8 +5,8 @@ import { fetchSearchMoviesByPageRange, getPage, getQuery, removeSkeletonItem, re
 addEventListener("load", async () => {
   let prevResponseList: MovieListResponse[] = [];
 
-  try {
-    async function renderSearchMoviePage(page: number, query: string) {
+  async function renderSearchMoviePage(page: number, query: string) {
+    try {
       setPage(page);
       setQuery(query);
 
@@ -20,8 +20,6 @@ addEventListener("load", async () => {
         query
       );
 
-      removeSkeletonItem();
-
       prevResponseList.push(...responseList);
 
       const movieList = responseList.reduce((arr: Movie[], response) => {
@@ -33,20 +31,22 @@ addEventListener("load", async () => {
 
       renderShowMoreButton(prevResponseList, page, () => {
         renderSearchMoviePage(getPage() + 1, getQuery());
-      })
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        showErrorToast({ title: error.name, message: error.message });
+      }
+    } finally {
+      removeSkeletonItem();
     }
+  }
 
-    const searchInput = document.querySelector<HTMLInputElement>(".search-input");
-    if (searchInput) searchInput.value = getQuery();
+  const searchInput = document.querySelector<HTMLInputElement>(".search-input");
+  if (searchInput) searchInput.value = getQuery();
 
-    await renderSearchMoviePage(getPage(), getQuery());
+  await renderSearchMoviePage(getPage(), getQuery());
 
-    if (prevResponseList.length && prevResponseList[0].results.length) {
-      renderTopRatedMovie(prevResponseList[0].results[0])
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      showErrorToast({ title: error.name, message: error.message })
-    }
+  if (prevResponseList.length && prevResponseList[0].results.length) {
+    renderTopRatedMovie(prevResponseList[0].results[0]);
   }
 });
