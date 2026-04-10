@@ -93,48 +93,80 @@ export async function fetchSearchMoviesByPageRange(startPage: number, endPage: n
   return Promise.all(promises);
 }
 
-export function createMovieItemTemplate(movie: Movie): string {
-  return `
-    <li>
-      <div class="item">
-        <img
-          class="thumbnail"
-          src="${import.meta.env.VITE_IMAGE_BASE_URL}/w200${movie.poster_path}"
-          onerror="this.src='/images/default_movie_image.png'"
-          alt="${movie.title}"
-        />
-        <div class="item-desc">
-          <p class="rate">
-            <img src="${import.meta.env.BASE_URL}images/star_empty.png" class="star" />
-            <span>${movie.vote_average.toFixed(1)}</span>
-          </p>
-          <p class="movie-title">${movie.title}</p>
-        </div>
-      </div>
-    </li>
-  `
+export function createMovieItemTemplate(movie: Movie): HTMLElement {
+  const li = document.createElement("li");
+  const item = document.createElement("div");
+  item.className = "item";
+
+  const img = document.createElement("img");
+  img.className = "thumbnail";
+  img.src = `${import.meta.env.VITE_IMAGE_BASE_URL}/w200${movie.poster_path}`;
+  img.alt = movie.title;
+  img.addEventListener("error", () => {
+    img.src = "/images/default_movie_image.png";
+  });
+
+  const itemDesc = document.createElement("div");
+  itemDesc.className = "item-desc";
+
+  const rateP = document.createElement("p");
+  rateP.className = "rate";
+
+  const starImg = document.createElement("img");
+  starImg.src = `${import.meta.env.BASE_URL}images/star_empty.png`;
+  starImg.className = "star";
+
+  const rateSpan = document.createElement("span");
+  rateSpan.textContent = movie.vote_average.toFixed(1);
+
+  rateP.appendChild(starImg);
+  rateP.appendChild(rateSpan);
+
+  const titleP = document.createElement("p");
+  titleP.className = "movie-title";
+  titleP.textContent = movie.title;
+
+  itemDesc.appendChild(rateP);
+  itemDesc.appendChild(titleP);
+  item.appendChild(img);
+  item.appendChild(itemDesc);
+  li.appendChild(item);
+
+  return li;
 }
 
-export function createSkeletonItemTemplate(): string {
-  return `
-    <li class="skeleton-item">
-      <div class="item">
-        <div class="skeleton thumbnail"></div>
-        <div class="item-desc">
-          <div class="skeleton skeleton-rate"></div>
-          <div class="skeleton skeleton-title"></div>
-        </div>
-      </div>
-    </li>
-  `
-}
+export function createSkeletonItemTemplate(): HTMLElement {
+  const li = document.createElement("li");
+  li.className = "skeleton-item";
 
-export function createSkeletonItemsTemplate(count: number): string {
-  return Array.from({ length: count }).map(createSkeletonItemTemplate).join("");
+  const item = document.createElement("div");
+  item.className = "item";
+
+  const thumbnail = document.createElement("div");
+  thumbnail.className = "skeleton thumbnail";
+
+  const itemDesc = document.createElement("div");
+  itemDesc.className = "item-desc";
+
+  const rate = document.createElement("div");
+  rate.className = "skeleton skeleton-rate";
+
+  const title = document.createElement("div");
+  title.className = "skeleton skeleton-title";
+
+  itemDesc.appendChild(rate);
+  itemDesc.appendChild(title);
+  item.appendChild(thumbnail);
+  item.appendChild(itemDesc);
+  li.appendChild(item);
+
+  return li;
 }
 
 export function renderSkeletonItems(length: number) {
-  document.querySelector(".thumbnail-list")?.insertAdjacentHTML("beforeend", createSkeletonItemsTemplate(length));
+  const list = document.querySelector(".thumbnail-list");
+  if (!list) return;
+  Array.from({ length }).forEach(() => list.appendChild(createSkeletonItemTemplate()));
 }
 
 export function renderTopRatedMovie(movie: Movie) {
@@ -166,10 +198,9 @@ export function renderTopRatedMovie(movie: Movie) {
 }
 
 export function renderMovies(movieList: Movie[]) {
-  document.querySelector(".thumbnail-list")?.insertAdjacentHTML(
-    "beforeend",
-    movieList.map((movie) => createMovieItemTemplate(movie)).join(""),
-  );
+  const list = document.querySelector(".thumbnail-list");
+  if (!list) return;
+  movieList.forEach((movie) => list.appendChild(createMovieItemTemplate(movie)));
 }
 
 export function updateEmptyListAlert() {
@@ -221,5 +252,10 @@ export function renderListTitle(query: string) {
 export function removeSkeletonItem() {
   document
     .querySelectorAll(".skeleton-item")
+    .forEach((element) => element.remove());
+}
+
+export function removeTopRatedMovieSkeleton() {
+  document.querySelectorAll(".top-rated-movie .skeleton")
     .forEach((element) => element.remove());
 }
