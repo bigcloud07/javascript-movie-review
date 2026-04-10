@@ -1,35 +1,8 @@
-import { FETCH_OPTION, FETCH_TIMEOUT_MS } from "./constans";
-import { Movie, MovieListResponse, TMDBAPIEndpoint } from "./type";
+import { Movie, MovieListResponse } from "./type";
 import { showErrorToast } from "./toast";
+import { setPage } from "./url";
 
-export function getPramFromURL(name: string, defaultValue: string) {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get(name) ?? defaultValue
-}
-
-export function getQuery() {
-  return getPramFromURL("query", "");
-}
-
-export function getPage() {
-  const pageStr = getPramFromURL("page", "1");
-  const page = isNaN(Number(pageStr)) ? 1 : Number(pageStr);
-  return Math.max(1, page);
-}
-
-export function setQuery(query: string) {
-  const url = new URL(window.location.href);
-  url.searchParams.set("query", query);
-  window.history.replaceState({}, "", url);
-}
-
-export function setPage(page: number) {
-  const url = new URL(window.location.href);
-  url.searchParams.set("page", String(page));
-  window.history.replaceState({}, "", url);
-}
-
-export function throttle<T extends (...args: any[]) => Promise<unknown> | void>(callback: T) {
+function throttle<T extends (...args: any[]) => Promise<unknown> | void>(callback: T) {
   let inFlight: Promise<unknown> | null = null;
 
   return (...args: Parameters<T>): void => {
@@ -39,109 +12,6 @@ export function throttle<T extends (...args: any[]) => Promise<unknown> | void>(
       inFlight = null;
     });
   };
-};
-
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function timeoutFn(ms: number) {
-  return new Promise((_, reject) => {
-    setTimeout(() => {
-      reject(new Error(`요청 시간이 ${ms}ms를 초과했습니다.`));
-    }, ms);
-  })
-}
-
-
-export async function fetchMovies(endpoint: "/search/movie", params: { query: string, page: number }): Promise<MovieListResponse>
-export async function fetchMovies(endpoint: "/movie/popular", params: { page: number }): Promise<MovieListResponse>
-export async function fetchMovies(endpoint: TMDBAPIEndpoint, params: Record<string, any>): Promise<MovieListResponse> {
-  const queryParams = new URLSearchParams({
-    language: "ko-KR",
-    ...params
-  });
-
-  try {
-    const fetchPromise = fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}?${queryParams}`, FETCH_OPTION).then(async res => {
-      if (!res.ok) {
-        const errorBody = await res.json().catch(() => null);
-        throw new Error(errorBody?.status_message ?? `${res.status} ${res.statusText}`);
-      }
-      return res.json();
-    });
-    return await Promise.race([fetchPromise, timeoutFn(FETCH_TIMEOUT_MS)]);
-  } catch (error) {
-    const newError = new Error();
-    newError.name = "API 요청중 에러가 발생했습니다."
-    newError.message = `${error instanceof Error ? (error.message ?? "not found error message") : "not found error"} (${endpoint})`
-    throw newError
-  }
-}
-
-export async function fetchPopularMoviesByPageRange(startPage: number, endPage: number) {
-  const promises = Array.from({ length: endPage - startPage }).map(
-    async (_, index) => {
-      if (index !== 0) await delay(index * 200);
-      return fetchMovies('/movie/popular', { page: startPage + index + 1 });
-    },
-  );
-
-  return Promise.all(promises);
-}
-
-export async function renderMoviePage({
-  page,
-  prevResponseList,
-  fetchFn,
-  beforeFetch,
-  afterRender,
-  extraFinally,
-  showMoreCallback,
-}: {
-  page: number;
-  prevResponseList: MovieListResponse[];
-  fetchFn: (startPage: number, page: number) => Promise<MovieListResponse[]>;
-  beforeFetch?: () => void;
-  afterRender?: () => void;
-  extraFinally?: () => void;
-  showMoreCallback: () => void;
-}): Promise<void> {
-  try {
-    setPage(page);
-    beforeFetch?.();
-    renderSkeletonItems(20);
-
-    const responseList = await fetchFn(prevResponseList.length, page);
-    prevResponseList.push(...responseList);
-
-    const movieList = responseList.reduce((arr: Movie[], response) => {
-      return [...arr, ...response.results];
-    }, []);
-
-    renderMovies(movieList);
-    afterRender?.();
-
-    renderShowMoreButton(prevResponseList, page, showMoreCallback);
-  } catch (error) {
-    if (error instanceof Error) {
-      showErrorToast({ title: error.name, message: error.message });
-    }
-  } finally {
-    removeSkeletonItem();
-    extraFinally?.();
-  }
-}
-
-export async function fetchSearchMoviesByPageRange(startPage: number, endPage: number, query: string) {
-  const promises = Array.from({ length: endPage - startPage }).map(
-    async (_, index) => {
-      if (index !== 0) await delay(index * 200);
-      return fetchMovies('/search/movie', { query, page: startPage + index + 1 });
-    },
-  );
-
-  return Promise.all(promises);
 }
 
 export function createMovieItemTemplate(movie: Movie): HTMLElement {
@@ -235,8 +105,7 @@ export function renderTopRatedMovie(movie: Movie) {
   }
 
   if (rateEl) {
-    rateEl.textContent =
-      movie.vote_average.toFixed(1);
+    rateEl.textContent = movie.vote_average.toFixed(1);
   }
 
   if (detailButtonEl) {
@@ -309,4 +178,47 @@ export function removeSkeletonItem() {
 export function removeTopRatedMovieSkeleton() {
   document.querySelectorAll(".top-rated-movie .skeleton")
     .forEach((element) => element.remove());
+}
+
+export async function renderMoviePage({
+  page,
+  prevResponseList,
+  fetchFn,
+  beforeFetch,
+  afterRender,
+  extraFinally,
+  showMoreCallback,
+}: {
+  page: number;
+  prevResponseList: MovieListResponse[];
+  fetchFn: (startPage: number, page: number) => Promise<MovieListResponse[]>;
+  beforeFetch?: () => void;
+  afterRender?: () => void;
+  extraFinally?: () => void;
+  showMoreCallback: () => void;
+}): Promise<void> {
+  try {
+    setPage(page);
+    beforeFetch?.();
+    renderSkeletonItems(20);
+
+    const responseList = await fetchFn(prevResponseList.length, page);
+    prevResponseList.push(...responseList);
+
+    const movieList = responseList.reduce((arr: Movie[], response) => {
+      return [...arr, ...response.results];
+    }, []);
+
+    renderMovies(movieList);
+    afterRender?.();
+
+    renderShowMoreButton(prevResponseList, page, showMoreCallback);
+  } catch (error) {
+    if (error instanceof Error) {
+      showErrorToast({ title: error.name, message: error.message });
+    }
+  } finally {
+    removeSkeletonItem();
+    extraFinally?.();
+  }
 }

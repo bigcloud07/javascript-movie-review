@@ -1,5 +1,7 @@
 import { MovieListResponse } from "./type";
-import { fetchSearchMoviesByPageRange, getPage, getQuery, renderListTitle, renderMoviePage, renderTopRatedMovie, setQuery, updateEmptyListAlert } from "./utils";
+import { fetchSearchMoviesByPageRange } from "./api";
+import { getPage, getQuery, setQuery } from "./url";
+import { renderListTitle, renderMoviePage, renderTopRatedMovie, updateEmptyListAlert } from "./render";
 
 addEventListener("load", async () => {
   let prevResponseList: MovieListResponse[] = [];

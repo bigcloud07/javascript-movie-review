@@ -1,5 +1,7 @@
 import { MovieListResponse } from "./type";
-import { fetchPopularMoviesByPageRange, getPage, removeTopRatedMovieSkeleton, renderMoviePage, renderTopRatedMovie } from "./utils";
+import { fetchPopularMoviesByPageRange } from "./api";
+import { getPage } from "./url";
+import { removeTopRatedMovieSkeleton, renderMoviePage, renderTopRatedMovie } from "./render";
 
 addEventListener("load", async () => {
   let prevResponseList: MovieListResponse[] = [];
