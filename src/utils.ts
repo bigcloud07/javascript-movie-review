@@ -62,7 +62,10 @@ export async function fetchMovies(endpoint: TMDBAPIEndpoint, params: Record<stri
   });
 
   try {
-    const fetchPromise = fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}?${queryParams}`, FETCH_OPTION).then(res => res.json());
+    const fetchPromise = fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}?${queryParams}`, FETCH_OPTION).then(res => {
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
+    });
     return await Promise.race([fetchPromise, timeoutFn(FETCH_TIMEOUT_MS)]);
   } catch (error) {
     const newError = new Error();
