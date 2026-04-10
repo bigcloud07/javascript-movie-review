@@ -1,4 +1,4 @@
-import { FETCH_OPTION, FETCH_TIMEOUT_MS, SHOW_MORE_TROTTLE_MS } from "./constans";
+import { FETCH_OPTION, FETCH_TIMEOUT_MS } from "./constans";
 import { Movie, MovieListResponse, TMDBAPIEndpoint } from "./type";
 
 export function getPramFromURL(name: string, defaultValue: string) {
@@ -28,17 +28,15 @@ export function setPage(page: number) {
   window.history.replaceState({}, "", url);
 }
 
-export function throttle<T extends (...args: any[]) => void>(callback: T, ms: number) {
-  let timer: ReturnType<typeof setTimeout> | null = null;
+export function throttle<T extends (...args: any[]) => Promise<unknown> | void>(callback: T) {
+  let inFlight: Promise<unknown> | null = null;
 
   return (...args: Parameters<T>): void => {
-    if (timer) return;
+    if (inFlight) return;
 
-    callback(...args);
-
-    timer = setTimeout(() => {
-      timer = null;
-    }, ms);
+    inFlight = Promise.resolve(callback(...args)).finally(() => {
+      inFlight = null;
+    });
   };
 };
 
@@ -87,7 +85,10 @@ export async function fetchPopularMoviesByPageRange(startPage: number, endPage: 
 
 export async function fetchSearchMoviesByPageRange(startPage: number, endPage: number, query: string) {
   const promises = Array.from({ length: endPage - startPage }).map(
-    (_, index) => fetchMovies('/search/movie', { query, page: startPage + index + 1 }),
+    async (_, index) => {
+      if (index !== 0) await delay(index * 200);
+      return fetchMovies('/search/movie', { query, page: startPage + index + 1 });
+    },
   );
 
   return Promise.all(promises);
@@ -104,7 +105,7 @@ export function createMovieItemTemplate(movie: Movie): HTMLElement {
   img.alt = movie.title;
   img.addEventListener("error", () => {
     img.src = "/images/default_movie_image.png";
-  });
+  }, { once: true });
 
   const itemDesc = document.createElement("div");
   itemDesc.className = "item-desc";
@@ -231,7 +232,7 @@ export function renderShowMoreButton(prevResponseList: MovieListResponse[], page
       const button = document.createElement("button");
       button.classList.add("show-more-button");
       button.textContent = "더보기";
-      button.addEventListener("click", throttle(callback, SHOW_MORE_TROTTLE_MS));
+      button.addEventListener("click", throttle(callback));
       document
         .querySelector(".thumbnail-list")
         ?.insertAdjacentElement("afterend", button);
