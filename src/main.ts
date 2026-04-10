@@ -5,8 +5,8 @@ import { showErrorToast } from "./toast";
 addEventListener("load", async () => {
   let prevResponseList: MovieListResponse[] = [];
 
-  try {
-    async function renderPopularMoviePage(page: number) {
+  async function renderPopularMoviePage(page: number) {
+    try {
       setPage(page);
 
       renderSkeletonItems(20);
@@ -28,17 +28,17 @@ addEventListener("load", async () => {
 
       renderShowMoreButton(prevResponseList, page, () => {
         renderPopularMoviePage(getPage() + 1);
-      })
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        showErrorToast({ title: error.name, message: error.message });
+      }
     }
+  }
 
-    await renderPopularMoviePage(getPage());
+  await renderPopularMoviePage(getPage());
 
-    if (prevResponseList.length && prevResponseList[0].results.length) {
-      renderTopRatedMovie(prevResponseList[0].results[0])
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      showErrorToast({ title: error.name, message: error.message })
-    }
+  if (prevResponseList.length && prevResponseList[0].results.length) {
+    renderTopRatedMovie(prevResponseList[0].results[0]);
   }
 });
