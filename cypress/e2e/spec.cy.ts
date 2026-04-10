@@ -38,13 +38,13 @@ describe("App 성공 케이스", () => {
   });
 
   context("검색 - 결과 있는 경우의 재검색", () => {
-    it("재검색 시에도 결과가 1개 이상 표시된다", () => {
+    it("다른 검색어로 재검색 시 기존 목록이 제거되고 새 결과가 표시된다", () => {
       cy.get(".search-input").type("Inception");
       cy.get(".search-submit").click();
       cy.wait("@searchMovies");
       cy.get(".item").its("length").should("be.gte", 1);
 
-      cy.get(".search-input").clear().type("Inception");
+      cy.get(".search-input").clear().type("Avatar");
       cy.get(".search-submit").click();
       cy.wait("@searchMovies");
       cy.get(".item").its("length").should("be.gte", 1);
