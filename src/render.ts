@@ -149,22 +149,34 @@ export function updateEmptyListAlert() {
   }
 }
 
-export function renderShowMoreButton(prevResponseList: MovieListResponse[], page: number, callback: () => void) {
-  if (
-    prevResponseList.length &&
-    prevResponseList[prevResponseList.length - 1].total_pages > page
-  ) {
-    if (!document.querySelector(".show-more-button")) {
-      const button = document.createElement("button");
-      button.classList.add("show-more-button");
-      button.textContent = "더보기";
-      button.addEventListener("click", throttle(callback));
-      document
-        .querySelector(".thumbnail-list")
-        ?.insertAdjacentElement("afterend", button);
+let scrollObserver: IntersectionObserver | null = null;
+
+function setupInfiniteScroll(prevResponseList: MovieListResponse[], page: number, callback: () => void) {
+  scrollObserver?.disconnect();
+  scrollObserver = null;
+
+  const hasMore =
+    prevResponseList.length > 0 &&
+    prevResponseList[prevResponseList.length - 1].total_pages > page;
+
+  let sentinel = document.querySelector<HTMLElement>(".scroll-sentinel");
+
+  if (hasMore) {
+    if (!sentinel) {
+      sentinel = document.createElement("div");
+      sentinel.className = "scroll-sentinel";
+      document.querySelector(".thumbnail-list")?.insertAdjacentElement("afterend", sentinel);
     }
+
+    const throttledCallback = throttle(callback);
+    scrollObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        throttledCallback();
+      }
+    });
+    scrollObserver.observe(sentinel);
   } else {
-    document.querySelector(".show-more-button")?.remove();
+    sentinel?.remove();
   }
 }
 
@@ -219,7 +231,7 @@ export async function renderMoviePage({
     renderMovies(movieList);
     afterRender?.();
 
-    renderShowMoreButton(prevResponseList, page, showMoreCallback);
+    setupInfiniteScroll(prevResponseList, page, showMoreCallback);
   } catch (error) {
     if (error instanceof Error) {
       showErrorToast({ title: error.name, message: error.message });
