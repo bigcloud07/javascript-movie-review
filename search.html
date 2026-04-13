@@ -5,9 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>영화 리뷰</title>
-  <script type="module" crossorigin src="/javascript-movie-review/assets/search-BRWxIgCG.js"></script>
-  <link rel="modulepreload" crossorigin href="/javascript-movie-review/assets/toast-C4uKtptt.js">
-  <link rel="stylesheet" crossorigin href="/javascript-movie-review/assets/toast-CnXDXeK9.css">
+  <script type="module" crossorigin src="/javascript-movie-review/assets/search-BxbOk90Y.js"></script>
+  <link rel="modulepreload" crossorigin href="/javascript-movie-review/assets/render-B0MAVuRz.js">
+  <link rel="stylesheet" crossorigin href="/javascript-movie-review/assets/render-BE9DqG_k.css">
 </head>
 
 <body>
@@ -30,7 +30,7 @@
       <main>
         <section>
           <h2 class="list-title">
-            <div class="skeleton skeleton-list-title"></div>
+            <span class="skeleton skeleton-list-title"></span>
           </h2>
           <ul class="thumbnail-list"></ul>
         </section>
@@ -41,6 +41,15 @@
       <p>&copy; 우아한테크코스 All Rights Reserved.</p>
       <p><img src="./images/woowacourse_logo.png" width="180" /></p>
     </footer>
+  </div>
+
+  <div class="modal-background" id="modalBackground">
+    <div class="modal">
+      <button class="close-modal" id="closeModal">
+        <img src="./images/modal_button_close.png" alt="닫기" />
+      </button>
+      <div class="modal-container"></div>
+    </div>
   </div>
 </body>
 
