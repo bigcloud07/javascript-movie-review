@@ -1,5 +1,5 @@
 import { FETCH_OPTION, FETCH_TIMEOUT_MS } from "./constans";
-import { MovieListResponse, TMDBAPIEndpoint } from "./type";
+import { MovieDetail, MovieListResponse, TMDBAPIEndpoint } from "./type";
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -58,4 +58,25 @@ export async function fetchSearchMoviesByPageRange(startPage: number, endPage: n
   );
 
   return Promise.all(promises);
+}
+
+export async function fetchMovieDetail(id: number): Promise<MovieDetail> {
+  const endpoint = `/movie/${id}`;
+  const queryParams = new URLSearchParams({ language: "ko-KR" });
+
+  try {
+    const fetchPromise = fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}?${queryParams}`, FETCH_OPTION).then(async res => {
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => null);
+        throw new Error(errorBody?.status_message ?? `${res.status} ${res.statusText}`);
+      }
+      return res.json();
+    });
+    return await Promise.race([fetchPromise, timeoutFn(FETCH_TIMEOUT_MS)]);
+  } catch (error) {
+    const newError = new Error();
+    newError.name = "API 요청중 에러가 발생했습니다.";
+    newError.message = `${error instanceof Error ? (error.message ?? "not found error message") : "not found error"} (${endpoint})`;
+    throw newError;
+  }
 }
