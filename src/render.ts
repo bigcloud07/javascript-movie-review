@@ -1,6 +1,6 @@
 import { Movie, MovieDetail, MovieListResponse } from "./type";
 import { fetchMovieDetail } from "./api";
-import { RATING_LABELS } from "./constans";
+import { RATING_LABELS } from "./constants";
 import { ratingStore } from "./rating";
 import { showErrorToast } from "./toast";
 import { setPage } from "./url";

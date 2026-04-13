@@ -1,4 +1,4 @@
-import { FETCH_OPTION, FETCH_TIMEOUT_MS } from "./constans";
+import { FETCH_OPTION, FETCH_TIMEOUT_MS } from "./constants";
 import { MovieDetail, MovieListResponse, TMDBAPIEndpoint } from "./type";
 
 function delay(ms: number) {
